@@ -33,7 +33,7 @@ class ImagesDataset(Dataset):
 
     def __getitem__(self, idx):
        img, label =self.get_X_y_from_img_idx(idx)
-       img=img.unsqueeze(0)
+    #    img=img.unsqueeze(0)
        return img, label
 
     def __repr__(self):
