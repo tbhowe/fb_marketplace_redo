@@ -1,6 +1,6 @@
 #%%
 from dataset import ImagesDataset
-from classifier import MinimalResNet
+from classifier import MinimalResNet, FeatureExtraction
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import torch
@@ -9,7 +9,7 @@ import numpy as np
 from torch.utils.data import random_split
 from torchvision import transforms
 from torch.optim import lr_scheduler
-
+torch.manual_seed(20)
 
 def train(
     model,
@@ -40,7 +40,9 @@ def train(
     # initialise optimiser, learning rate scheduler, iteration variables
     optimiser = optimiser(model.parameters(), lr=lr, weight_decay=0.001)
     scheduler = lr_scheduler.MultiStepLR(optimiser, milestones=[4,9], gamma=0.1,verbose=True)
-    # state_dict=torch.load( 'good_saved_weights/weights_from_reduced_ds.pt' )
+    
+    # weights_fn='model_evaluation/TransferLearning2023-02-22-09:49:01/saved_weights/_1_latest_weights.pt'
+    # state_dict=torch.load(weights_fn)
     # model.load_state_dict(state_dict)
     batch_idx = 0
     epoch_idx= 0
@@ -51,6 +53,7 @@ def train(
         epoch_idx +=1
         torch.save(model.state_dict(), weights_filename)
         for batch in train_loader:  
+            model.train()
             features, labels = batch
             prediction = model(features)  
             loss = F.cross_entropy(prediction, labels)
@@ -81,6 +84,7 @@ def train(
     
 
 def evaluate(model, dataloader):
+    model.eval()
     losses = []
     correct = 0
     n_examples = 0
@@ -116,7 +120,7 @@ def split_dataset(dataset):
 
 if __name__ == "__main__":
 
-    size = 64
+    size = 128
     transform = transforms.Compose([
         transforms.Resize(size),
         transforms.RandomCrop((size,size), pad_if_needed=True),
