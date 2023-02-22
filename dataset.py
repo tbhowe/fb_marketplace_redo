@@ -32,7 +32,9 @@ class ImagesDataset(Dataset):
         }
 
     def __getitem__(self, idx):
-       return self.get_X_y_from_img_idx(idx)
+       img, label =self.get_X_y_from_img_idx(idx)
+       img=img.unsqueeze(0)
+       return img, label
 
     def __repr__(self):
         return "hello"  
@@ -43,7 +45,7 @@ class ImagesDataset(Dataset):
     def load_dataframe(self):
         '''loads the products csv from the Facebook Marketplace porject into a pandas Dataframe.
         Additinoally encodes the first layer of the product category as a unique int '''
-        product_df = pd.read_csv('products.csv',lineterminator='\n', index_col=0)
+        product_df = pd.read_csv('products_cleaned.csv',lineterminator='\n', index_col=0)
         product_df['price'] = product_df['price'].replace('[\£,]', '', regex=True).astype(float)
         image_df=pd.read_csv('images.csv',lineterminator='\n', index_col=0)
         self.image_df=image_df.merge(product_df, left_on ='product_id', right_on='id')
@@ -75,15 +77,15 @@ class ImagesDataset(Dataset):
         return (value_counts/total_n)*100
 
 if __name__ == "__main__":
-    size=64
+    size=128
     transform = transforms.Compose([
         transforms.Resize(size),
         transforms.RandomCrop((size,size), pad_if_needed=True),
         transforms.ToTensor(),
         ])
     dataset=ImagesDataset(transform=transform)
-    img,label=dataset.__getitem__(1)
-    print(label)
+    img,label=dataset[10]
+    print(img.shape)
     # idx_to_cat=dataset.idx_to_category_name
     # with open('idx_to_cat.pickle', 'wb') as handle:
     #     pickle.dump(idx_to_cat, handle, protocol=pickle.HIGHEST_PROTOCOL)
