@@ -120,7 +120,7 @@ def split_dataset(dataset):
 
 if __name__ == "__main__":
 
-    size = 128
+    size = 256
     transform = transforms.Compose([
         transforms.Resize(size),
         transforms.RandomCrop((size,size), pad_if_needed=True),
@@ -130,20 +130,20 @@ if __name__ == "__main__":
     dataset = ImagesDataset(transform=transform)
     
     train_set,val_set,test_set=split_dataset(dataset)
-    batch_size = 32
+    batch_size = 64
     train_loader = DataLoader(train_set, shuffle=True, batch_size=batch_size)
     val_loader = DataLoader(val_set, batch_size=batch_size)
     test_loader = DataLoader(test_set, batch_size=batch_size)
     # nn = NeuralNetworkClassifier()
     # cnn = CNN()
-    model = MinimalResNet()
+    model = FeatureExtraction()
     
     train(
         model,
         train_loader,
         val_loader,
         test_loader,
-        epochs=12,
+        epochs=30,
         lr=0.0001,
         optimiser=torch.optim.AdamW
         
