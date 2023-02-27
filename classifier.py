@@ -6,7 +6,7 @@ from torchvision.models import ResNet50_Weights
 from torchvision import transforms
 import os 
 import time
-
+from torch.nn.functional import relu
 
 
 class MinimalResNet(torch.nn.Module):
@@ -50,9 +50,42 @@ class MinimalResNet(torch.nn.Module):
             os.makedirs('model_evaluation/' + folder_name + '/saved_weights/') 
         self.weights_folder_name='model_evaluation/' + folder_name + '/saved_weights/'
 
+class FeatureExtractor(torch.nn.Module):
+     
+    def __init__(self):
+        super().__init__()
+        self.layers = resnet50(weights=ResNet50_Weights)
+        # for param in self.layers.parameters():
+        #     param.grad_required = False
+        for name, param in self.layers.named_parameters():
+            if "layer4" in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+        self.linear_layers_1 = torch.nn.Linear(2048, 1000)
+        self.linear_layers_2 = torch.nn.Sequential(
+                        torch.nn.Linear(1000, 256),
+                        torch.nn.ReLU,
+                        torch.nn.Linear(256,13)  
+                        )
+        self.initialise_weights_folders()
+       
 
+    def forward(self, x):
+        '''defines the forward pass for the model'''
+        x= relu(self.layers(x))
+        x= relu(self.linear_layers_1(x))
+        x =self.linear_layers_2(x)
+        return x
 
-
+    def initialise_weights_folders(self):
+        ''' method to create folder for saved weights'''
+        start_time = time.strftime('%Y-%m-%d-%H:%M:%S', time.localtime())
+        folder_name=str('TransferLearning_34_unfreeze'+ start_time)
+        if not os.path.exists('model_evaluation/' + folder_name + '/saved_weights/'):
+            os.makedirs('model_evaluation/' + folder_name + '/saved_weights/') 
+        self.weights_folder_name='model_evaluation/' + folder_name + '/saved_weights/'
+    
 
 if __name__ == '__main__':
     model=MinimalResNet()
