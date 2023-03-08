@@ -142,7 +142,7 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_set, batch_size=batch_size)
     # nn = NeuralNetworkClassifier()
     # cnn = CNN()
-    model = FeatureExtractor()
+    model = MinimalResNet()
     
     train(
         model,
