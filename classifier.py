@@ -45,7 +45,7 @@ class MinimalResNet(torch.nn.Module):
     def initialise_weights_folders(self):
         ''' method to create folder for saved weights'''
         start_time = time.strftime('%Y-%m-%d-%H:%M:%S', time.localtime())
-        folder_name=str('TransferLearning_34_unfreeze'+ start_time)
+        folder_name=str('feature_extract'+ start_time)
         if not os.path.exists('model_evaluation/' + folder_name + '/saved_weights/'):
             os.makedirs('model_evaluation/' + folder_name + '/saved_weights/') 
         self.weights_folder_name='model_evaluation/' + folder_name + '/saved_weights/'
@@ -62,10 +62,10 @@ class FeatureExtractor(torch.nn.Module):
                 param.requires_grad = True
             else:
                 param.requires_grad = False
-        self.linear_layers_1 = torch.nn.Linear(2048, 1000)
+        self.linear_layers_1 = torch.nn.Linear(1000, 1000)
         self.linear_layers_2 = torch.nn.Sequential(
                         torch.nn.Linear(1000, 256),
-                        torch.nn.ReLU,
+                        torch.nn.ReLU(),
                         torch.nn.Linear(256,13)  
                         )
         self.initialise_weights_folders()
@@ -88,9 +88,8 @@ class FeatureExtractor(torch.nn.Module):
     
 
 if __name__ == '__main__':
-    model=MinimalResNet()
+    
+    model=FeatureExtractor()
 
-    for name, child in model.named_parameters():
-        print(name)
-    pass
+    
 # %%
