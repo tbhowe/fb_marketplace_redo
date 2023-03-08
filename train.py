@@ -1,6 +1,6 @@
 #%%
 from dataset import ImagesDataset
-from classifier import MinimalResNet
+from classifier import MinimalResNet, FeatureExtractor
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import torch
@@ -39,9 +39,9 @@ def train(
 
     # initialise optimiser, learning rate scheduler, iteration variables
     optimiser = optimiser(model.parameters(), lr=lr, weight_decay=0.001)
-    scheduler = lr_scheduler.MultiStepLR(optimiser, milestones=[4,9,20], gamma=0.1,verbose=True)
+    scheduler = lr_scheduler.MultiStepLR(optimiser, milestones=[4,9], gamma=0.1,verbose=True)
     
-    # weights_fn='model_evaluation/TransferLearning2023-02-22-09:49:01/saved_weights/_1_latest_weights.pt'
+    # weights_fn='model_evaluation/TransferLearning_34_unfreeze2023-02-23-06:27:02/saved_weights/_4_latest_weights.pt'
     # state_dict=torch.load(weights_fn)
     # model.load_state_dict(state_dict)
     batch_idx = 0
@@ -90,7 +90,9 @@ def evaluate(model, dataloader):
     n_examples = 0
     for batch in dataloader:
         features, labels = batch
-        prediction = model(features)
+        with torch.no_grad():
+            prediction = model(features)
+            
         loss = F.cross_entropy(prediction, labels)
         losses.append(loss.detach())
         correct += torch.sum(torch.argmax(prediction, dim=1) == labels)
@@ -120,11 +122,15 @@ def split_dataset(dataset):
 
 if __name__ == "__main__":
 
-    size = 128
+    size = 224
     transform = transforms.Compose([
         transforms.Resize(size),
         transforms.RandomCrop((size,size), pad_if_needed=True),
+        transforms.RandomVerticalFlip(p=0.25),
+        transforms.RandomHorizontalFlip(p=0.25),
+        # transforms.AugMix(),
         transforms.ToTensor(),
+        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         ])
 
     dataset = ImagesDataset(transform=transform)
@@ -136,15 +142,21 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_set, batch_size=batch_size)
     # nn = NeuralNetworkClassifier()
     # cnn = CNN()
-    model = MinimalResNet()
+    model = FeatureExtractor()
     
     train(
         model,
         train_loader,
         val_loader,
         test_loader,
-        epochs=30,
+        epochs=20,
         lr=0.0001,
         optimiser=torch.optim.AdamW
         
     )
+ 
+
+
+
+
+# %%
